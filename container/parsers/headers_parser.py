@@ -24,7 +24,7 @@ def build_command(target: str) -> list[str]:
     safe_url = shlex.quote(url)
     return [
         "sh", "-c",
-        f"echo {safe_url} | httpx -json -silent -title -server -tech-detect -status-code -follow-redirects -include-response-header",
+        f"echo {safe_url} | httpx -json -silent -title -server -tech-detect -status-code -follow-redirects -include-response-header -include-chain -location",
     ]
 
 
@@ -52,6 +52,8 @@ def parse_output(stdout: str, stderr: str) -> dict[str, Any]:
         "server": "",
         "security_headers": {k: "missing" for k in SECURITY_HEADER_KEYS},
         "all_headers": {},
+        "redirect_chain": [],
+        "final_url": "",
     }
 
     technologies_from_httpx: list[dict[str, Any]] = []
@@ -97,6 +99,19 @@ def parse_output(stdout: str, stderr: str) -> dict[str, Any]:
                         "version": None,
                         "confidence": None,
                     })
+
+            # Extract redirect chain from httpx's -include-chain output
+            chain_items = data.get("chain", []) or []
+            redirect_chain: list[dict[str, Any]] = []
+            for item in chain_items:
+                if isinstance(item, dict):
+                    redirect_chain.append({
+                        "url": item.get("request-url", ""),
+                        "status_code": item.get("status_code", 0),
+                        "location": item.get("location", ""),
+                    })
+            result["redirect_chain"] = redirect_chain
+            result["final_url"] = data.get("final_url", "") or ""
 
             break  # process first JSON line only
     except (json.JSONDecodeError, KeyError, TypeError):

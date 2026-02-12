@@ -122,6 +122,12 @@ function exportCSV() {
     Object.keys(d.headers.security_headers || {}).forEach(function(k) {
       rows.push(['Headers', k, d.headers.security_headers[k]]);
     });
+    (d.headers.redirect_chain || []).forEach(function(hop, i) {
+      rows.push(['Redirect', 'hop_' + i, hop.status_code + ' ' + (hop.url || '') + (hop.location ? ' -> ' + hop.location : '')]);
+    });
+    if (d.headers.final_url) {
+      rows.push(['Redirect', 'final_url', d.headers.final_url]);
+    }
   }
   if (d.ip_info) {
     rows.push(['IP', 'ip', d.ip_info.ip || '']);
@@ -267,6 +273,11 @@ function renderResults(data) {
   if (data.dns && data.dns.cdn_detected) parts.push(badge('CDN', data.dns.cdn_detected, 'text-status-success'));
   var protos = (data.tls && data.tls.protocols) ? data.tls.protocols.join(', ') : 'N/A';
   parts.push(badge('TLS', protos, 'text-content-accent'));
+  var chain = (data.headers && data.headers.redirect_chain) || [];
+  if (chain.length > 1) {
+    var hopCount = chain.length - 1;
+    parts.push(badge('Redirects', hopCount + ' hop' + (hopCount !== 1 ? 's' : ''), 'text-status-warning'));
+  }
   document.getElementById('summary-bar').innerHTML = parts.join('');
 
   // Security Score
@@ -339,6 +350,31 @@ function renderResults(data) {
         : '<span class="text-status-danger text-xs">Missing</span>';
       hH += '</div>';
     });
+    hH += '</div>';
+  }
+  // Redirect chain
+  var chain = hdrs.redirect_chain || [];
+  if (chain.length > 1) {
+    hH += '<div class="mt-4 pt-3 border-t border-line">';
+    hH += '<div class="text-xs text-content-muted font-semibold mb-2">Redirect Chain</div>';
+    hH += '<div class="space-y-1">';
+    for (var ci = 0; ci < chain.length; ci++) {
+      var hop = chain[ci];
+      var isLast = ci === chain.length - 1;
+      var scColor = 'text-content-muted';
+      if (hop.status_code >= 200 && hop.status_code < 300) scColor = 'text-status-success';
+      else if (hop.status_code >= 300 && hop.status_code < 400) scColor = 'text-status-warning';
+      else if (hop.status_code >= 400) scColor = 'text-status-danger';
+      hH += '<div class="flex items-center gap-2 text-xs">';
+      hH += '<span class="flex-shrink-0 font-mono ' + scColor + '">' + hop.status_code + '</span>';
+      hH += '<span class="text-content-faint">' + (isLast ? '&#x25CF;' : '&rarr;') + '</span>';
+      hH += '<span class="font-mono text-content-secondary truncate">' + esc(hop.url || '(unknown)') + '</span>';
+      hH += '</div>';
+    }
+    hH += '</div>';
+    if (hdrs.final_url) {
+      hH += '<div class="mt-2 text-xs text-content-muted">Final: <span class="text-content-secondary font-mono">' + esc(hdrs.final_url) + '</span></div>';
+    }
     hH += '</div>';
   }
   hH += '</div>';
