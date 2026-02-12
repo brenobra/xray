@@ -59,12 +59,18 @@ The container sleeps after 5 minutes of inactivity and wakes automatically on th
    npm install
    ```
 
-2. **Configure `wrangler.jsonc`:**
+2. **Create your Wrangler config:**
 
-   Replace the placeholder values with your own:
+   ```sh
+   cp wrangler.jsonc.example wrangler.jsonc
+   ```
+
+   Edit `wrangler.jsonc` and fill in your values:
    - `account_id` — your Cloudflare account ID
    - `database_id` — your D1 database ID (created in the next step)
    - `ALLOWED_ORIGIN` — the domain where your frontend is served (for CORS)
+
+   This file is gitignored so your credentials stay local.
 
 3. **Create the D1 database and apply the schema:**
 
