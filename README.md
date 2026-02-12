@@ -32,6 +32,17 @@ Browser → Cloudflare Worker (TypeScript)
 | [httpx](https://github.com/projectdiscovery/httpx) | Probes HTTP servers and extracts response headers, status codes, and metadata | [projectdiscovery/httpx](https://github.com/projectdiscovery/httpx) |
 | [subfinder](https://github.com/projectdiscovery/subfinder) | Passive subdomain discovery using certificate transparency logs, search engines, and other OSINT sources | [projectdiscovery/subfinder](https://github.com/projectdiscovery/subfinder) |
 
+## How the Container Works
+
+The scanner runs inside a [Cloudflare Container](https://developers.cloudflare.com/containers/) — a Docker-based compute environment that runs alongside your Worker. The container is built with a multi-stage Dockerfile:
+
+1. **Stage 1 (Go builder)** — compiles `dnsx`, `httpx`, and `subfinder` from source as static binaries
+2. **Stage 2 (Python runtime)** — installs the Python tools (`wafw00f`, `webtech`, `sslyze`) via pip, copies the Go binaries in, and runs a FastAPI server on port 8080
+
+When a scan is requested, the Worker picks a container instance from a pool of up to 5 (routed by target hash) and sends a POST to `/scan`. The container runs all 7 tools concurrently as subprocesses with a 60s per-tool timeout and a 120s total timeout. Partial results are preserved if individual tools fail or time out.
+
+The container sleeps after 5 minutes of inactivity and wakes automatically on the next request.
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18+)
