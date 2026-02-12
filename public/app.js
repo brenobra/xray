@@ -12,6 +12,43 @@ function esc(str) {
   return d.innerHTML;
 }
 
+// =========================================================================
+// Subdomain UI Helpers
+// =========================================================================
+
+function toggleSubFilter(level) {
+  var btn = document.querySelector('[data-sub-filter="' + level + '"]');
+  if (!btn) return;
+  btn.classList.toggle('active');
+  var isActive = btn.classList.contains('active');
+  if (!isActive) {
+    btn.style.opacity = '0.35';
+  } else {
+    btn.style.opacity = '';
+  }
+  // Show/hide category sections matching this interest level
+  var sections = document.querySelectorAll('.sub-category-section[data-interest="' + level + '"]');
+  for (var i = 0; i < sections.length; i++) {
+    sections[i].style.display = isActive ? '' : 'none';
+  }
+}
+
+function toggleSubCategory(btn) {
+  var body = btn.parentElement.querySelector('.sub-category-body');
+  var chevron = btn.querySelector('.sub-chevron');
+  if (!body) return;
+  body.classList.toggle('hidden');
+  if (chevron) chevron.classList.toggle('rotate-90');
+}
+
+function toggleSubGroup(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('hidden');
+  var chevron = el.parentElement.querySelector('.sub-grp-chevron');
+  if (chevron) chevron.classList.toggle('rotate-90');
+}
+
 function exportJSON() {
   if (!lastScanData) return;
   var blob = new Blob([JSON.stringify(lastScanData, null, 2)], { type: 'application/json' });
@@ -69,6 +106,18 @@ function exportCSV() {
     rows.push(['Score', 'score', String(d.security_score.score || 0)]);
     (d.security_score.recommendations || []).forEach(function(r) {
       rows.push(['Score', 'recommendation', r]);
+    });
+  }
+  // Subdomains — use classified data if available, else flat list
+  var csvSubs = d.subdomains || {};
+  var csvClassified = csvSubs.classified || [];
+  if (csvClassified.length) {
+    csvClassified.forEach(function(item) {
+      rows.push(['Subdomain', item.subdomain, item.category + ' (' + item.interest + ') — ' + item.cf_opportunity]);
+    });
+  } else {
+    (csvSubs.subdomains || []).forEach(function(sub) {
+      rows.push(['Subdomain', sub, '']);
     });
   }
   var csv = rows.map(function(r) {
@@ -294,8 +343,97 @@ function renderResults(data) {
   // Subdomains
   var subs = data.subdomains || {};
   var subList = subs.subdomains || [];
+  var classified = subs.classified || [];
   var sH = '';
-  if (subList.length) {
+
+  if (classified.length) {
+    // --- Interest summary pills (double as filters) ---
+    var stats = subs.stats || {};
+    sH += '<div class="flex items-center gap-2 mb-3 flex-wrap">';
+    sH += '<span class="text-gray-500 text-sm">' + subList.length + ' subdomain' + (subList.length !== 1 ? 's' : '') + '</span>';
+    if (stats.high_interest) sH += '<button onclick="toggleSubFilter(\'high\')" data-sub-filter="high" class="sub-filter-pill active text-xs px-2.5 py-1 rounded-full bg-red-900/40 text-red-400 border border-red-800 hover:bg-red-900/60 transition-colors">' + stats.high_interest + ' High</button>';
+    if (stats.medium_interest) sH += '<button onclick="toggleSubFilter(\'medium\')" data-sub-filter="medium" class="sub-filter-pill active text-xs px-2.5 py-1 rounded-full bg-yellow-900/40 text-yellow-400 border border-yellow-800 hover:bg-yellow-900/60 transition-colors">' + stats.medium_interest + ' Medium</button>';
+    if (stats.low_interest) sH += '<button onclick="toggleSubFilter(\'low\')" data-sub-filter="low" class="sub-filter-pill active text-xs px-2.5 py-1 rounded-full bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700 transition-colors">' + stats.low_interest + ' Low</button>';
+    sH += '</div>';
+
+    // --- Build category sections ordered by interest ---
+    var interestOrder = { high: 0, medium: 1, low: 2 };
+    var catColorDot = { high: 'bg-red-500', medium: 'bg-yellow-500', low: 'bg-gray-500' };
+    var catTagBg = { high: 'bg-red-900/30 text-red-300 border border-red-900/50', medium: 'bg-yellow-900/30 text-yellow-300 border border-yellow-900/50', low: 'bg-gray-800 text-gray-300' };
+
+    // Group classified items by category while preserving order
+    var catGroups = [];
+    var catSeen = {};
+    classified.forEach(function(item) {
+      if (!catSeen[item.category]) {
+        catSeen[item.category] = { name: item.category, interest: item.interest, cf_opportunity: item.cf_opportunity, items: [] };
+        catGroups.push(catSeen[item.category]);
+      }
+      catSeen[item.category].items.push(item);
+    });
+    catGroups.sort(function(a, b) { return (interestOrder[a.interest] || 9) - (interestOrder[b.interest] || 9); });
+
+    // Build group lookup for prefix clusters
+    var groupsByCategory = {};
+    (subs.groups || []).forEach(function(g) {
+      if (!groupsByCategory[g.category]) groupsByCategory[g.category] = [];
+      groupsByCategory[g.category].push(g);
+    });
+
+    sH += '<div class="space-y-3">';
+    catGroups.forEach(function(cat, catIdx) {
+      var dotClass = catColorDot[cat.interest] || 'bg-gray-500';
+      var tagClass = catTagBg[cat.interest] || 'bg-gray-800 text-gray-300';
+      var defaultOpen = cat.interest === 'high';
+
+      sH += '<div class="sub-category-section" data-interest="' + esc(cat.interest) + '">';
+      // Header
+      sH += '<button onclick="toggleSubCategory(this)" class="flex items-center gap-2 w-full text-left group">';
+      sH += '<span class="w-2 h-2 rounded-full flex-shrink-0 ' + dotClass + '"></span>';
+      sH += '<span class="text-sm font-medium text-gray-200">' + esc(cat.name) + '</span>';
+      sH += '<span class="text-xs text-gray-500">(' + cat.items.length + ')</span>';
+      sH += '<span class="text-xs text-gray-600 ml-1">' + esc(cat.cf_opportunity) + '</span>';
+      sH += '<svg class="sub-chevron w-3.5 h-3.5 text-gray-600 ml-auto transition-transform ' + (defaultOpen ? 'rotate-90' : '') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+      sH += '</button>';
+
+      // Body
+      sH += '<div class="sub-category-body mt-2 flex flex-wrap gap-1.5 pl-4' + (defaultOpen ? '' : ' hidden') + '">';
+
+      // Check for prefix groups in this category
+      var groups = groupsByCategory[cat.name] || [];
+      var groupedSubs = {};
+      groups.forEach(function(g) {
+        g.members.forEach(function(m) { groupedSubs[m] = g.prefix; });
+      });
+
+      // Render groups first
+      groups.forEach(function(g, gIdx) {
+        var gId = 'subgrp-' + catIdx + '-' + gIdx;
+        sH += '<div class="w-full">';
+        sH += '<button onclick="toggleSubGroup(\'' + gId + '\')" class="text-xs text-gray-400 hover:text-gray-200 font-mono flex items-center gap-1">';
+        sH += '<svg class="sub-grp-chevron w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+        sH += esc(g.prefix) + ' <span class="text-gray-600">(' + g.count + ')</span>';
+        sH += '</button>';
+        sH += '<div id="' + gId + '" class="hidden mt-1 flex flex-wrap gap-1.5 pl-4">';
+        g.members.forEach(function(m) {
+          sH += '<span class="inline-block ' + tagClass + ' text-xs px-2 py-1 rounded font-mono">' + esc(m) + '</span>';
+        });
+        sH += '</div></div>';
+      });
+
+      // Render ungrouped subdomains
+      cat.items.forEach(function(item) {
+        if (!groupedSubs[item.subdomain]) {
+          sH += '<span class="inline-block ' + tagClass + ' text-xs px-2 py-1 rounded font-mono">' + esc(item.subdomain) + '</span>';
+        }
+      });
+
+      sH += '</div></div>';
+    });
+    sH += '</div>';
+
+  } else if (subList.length) {
+    // Fallback: old scan data without classification
     sH += '<div class="mb-2 text-sm"><span class="text-gray-500">Found:</span> <span class="text-blue-400 font-medium">' + subList.length + ' subdomain' + (subList.length !== 1 ? 's' : '') + '</span></div>';
     var shown = subList.slice(0, 20);
     sH += '<div class="flex flex-wrap gap-1.5">';
