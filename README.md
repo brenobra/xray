@@ -21,6 +21,17 @@ Browser → Cloudflare Worker (TypeScript)
                     └── whois     — WHOIS lookups
 ```
 
+## Tools
+
+| Tool | Description | Repo |
+|------|-------------|------|
+| [wafw00f](https://github.com/EnableSecurity/wafw00f) | Identifies and fingerprints Web Application Firewalls (WAFs) by sending HTTP probes and analyzing responses | [EnableSecurity/wafw00f](https://github.com/EnableSecurity/wafw00f) |
+| [webtech](https://github.com/nicksahler/webtech) | Detects technologies used by websites — frameworks, CMS, CDNs, analytics, and more | [nicksahler/webtech](https://github.com/nicksahler/webtech) |
+| [SSLyze](https://github.com/nabla-c0d3/sslyze) | Analyzes TLS/SSL configuration — cipher suites, certificate chain, protocol support, and common misconfigurations | [nabla-c0d3/sslyze](https://github.com/nabla-c0d3/sslyze) |
+| [dnsx](https://github.com/projectdiscovery/dnsx) | Fast multi-purpose DNS toolkit — resolves A, AAAA, MX, NS, TXT, CNAME, and other record types | [projectdiscovery/dnsx](https://github.com/projectdiscovery/dnsx) |
+| [httpx](https://github.com/projectdiscovery/httpx) | Probes HTTP servers and extracts response headers, status codes, and metadata | [projectdiscovery/httpx](https://github.com/projectdiscovery/httpx) |
+| [subfinder](https://github.com/projectdiscovery/subfinder) | Passive subdomain discovery using certificate transparency logs, search engines, and other OSINT sources | [projectdiscovery/subfinder](https://github.com/projectdiscovery/subfinder) |
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18+)
@@ -32,8 +43,8 @@ Browser → Cloudflare Worker (TypeScript)
 1. **Clone and install dependencies:**
 
    ```sh
-   git clone https://github.com/<your-username>/site-intelligence.git
-   cd site-intelligence
+   git clone https://github.com/brenobra/xray.git
+   cd xray
    npm install
    ```
 
