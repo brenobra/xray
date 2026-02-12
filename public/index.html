@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X-Ray — Site Intelligence</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes scan-pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .scan-pulse { animation: scan-pulse 1.5s ease-in-out infinite; }
+    .result-section { transition: all .3s ease; }
+    /* Tailwind CDN safelist — classes used in dynamic JS must exist in the DOM */
+    .hidden-safelist {
+      color: theme('colors.green.400') theme('colors.red.400') theme('colors.yellow.400')
+            theme('colors.blue.400') theme('colors.purple.400') theme('colors.gray.400')
+            theme('colors.orange.400');
+    }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-gray-800 px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center gap-3">
+      <h1 class="text-xl font-bold text-white tracking-tight">
+        <span class="text-blue-400">X</span>-Ray
+      </h1>
+      <span class="text-gray-600">|</span>
+      <span class="text-sm text-gray-500">Site Intelligence</span>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- Scan Input -->
+    <div class="mb-8">
+      <div class="flex gap-3">
+        <input
+          id="target-input"
+          type="text"
+          placeholder="Enter a URL or domain (e.g., example.com)"
+          class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          onkeydown="if(event.key==='Enter')startScan()"
+        />
+        <button
+          id="scan-btn"
+          onclick="startScan()"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >Scan</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="hidden mb-8">
+      <div class="bg-gray-900 border border-gray-800 rounded-lg p-6">
+        <div class="flex items-center gap-3 scan-pulse">
+          <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+          <span class="text-gray-300">Scanning target&hellip; This may take up to 2 minutes.</span>
+        </div>
+        <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-gray-500">
+          <span>WAF Detection&hellip;</span>
+          <span>Tech Stack&hellip;</span>
+          <span>TLS Analysis&hellip;</span>
+          <span>DNS Enumeration&hellip;</span>
+          <span>Header Analysis&hellip;</span>
+          <span>IP Resolution&hellip;</span>
+          <span>WHOIS Lookup&hellip;</span>
+          <span>Subdomains&hellip;</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="error" class="hidden mb-8">
+      <div class="bg-red-950 border border-red-800 rounded-lg p-4">
+        <p class="text-red-400" id="error-msg"></p>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results" class="hidden space-y-6">
+      <!-- Summary Bar -->
+      <div class="flex items-center justify-between gap-4">
+        <div id="summary-bar" class="bg-gray-900 border border-gray-800 rounded-lg p-4 flex flex-wrap gap-3 text-sm flex-1"></div>
+        <div class="flex gap-2 flex-shrink-0">
+          <button onclick="exportJSON()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg transition-colors">Export JSON</button>
+          <button onclick="exportCSV()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg transition-colors">Export CSV</button>
+        </div>
+      </div>
+
+      <!-- Security Score (full width) -->
+      <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
+        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Security Score</h3>
+        <div id="score-content"></div>
+      </div>
+
+      <!-- 6 Result Cards -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">WAF Detection</h3>
+          <div id="waf-content"></div>
+        </div>
+        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Technologies</h3>
+          <div id="tech-content"></div>
+        </div>
+        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">TLS / SSL</h3>
+          <div id="tls-content"></div>
+        </div>
+        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">DNS Records</h3>
+          <div id="dns-content"></div>
+        </div>
+        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">HTTP Headers</h3>
+          <div id="headers-content"></div>
+        </div>
+        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">IP Information</h3>
+          <div id="ip-content"></div>
+        </div>
+        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">WHOIS</h3>
+          <div id="whois-content"></div>
+        </div>
+        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Subdomains</h3>
+          <div id="subdomains-content"></div>
+        </div>
+      </div>
+
+      <!-- Errors (if any) -->
+      <div id="scan-errors" class="hidden">
+        <div class="bg-yellow-950 border border-yellow-800 rounded-lg p-4">
+          <h4 class="text-sm font-semibold text-yellow-400 mb-2">Partial Results — Some tools encountered errors:</h4>
+          <ul id="scan-errors-list" class="text-sm text-yellow-300 list-disc list-inside space-y-1"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan History -->
+    <div class="mt-12">
+      <div class="flex items-center justify-between mb-4 gap-3">
+        <h2 class="text-lg font-semibold text-gray-300">Recent Scans</h2>
+        <div class="flex gap-2">
+          <input
+            id="history-search"
+            type="text"
+            placeholder="Search domains..."
+            oninput="onHistorySearch()"
+            class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 w-48"
+          />
+          <select
+            id="history-filter"
+            onchange="onHistoryFilter()"
+            class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none focus:border-blue-500"
+          >
+            <option value="">All statuses</option>
+            <option value="completed">Completed</option>
+            <option value="running">Running</option>
+            <option value="failed">Failed</option>
+          </select>
+        </div>
+      </div>
+      <div id="history-list" class="space-y-2">
+        <p class="text-gray-600 text-sm">Loading history&hellip;</p>
+      </div>
+      <button
+        id="history-load-more"
+        onclick="loadMoreHistory()"
+        class="hidden mt-4 w-full bg-gray-900 border border-gray-800 hover:border-gray-600 text-gray-400 text-sm py-2 rounded-lg transition-colors"
+      >Load More</button>
+    </div>
+
+  </main>
+
+<script src="/app.js"></script>
+</body>
+</html>

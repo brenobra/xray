@@ -1,0 +1,67 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "site-intelligence",
+  "account_id": "your-cloudflare-account-id",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-04-03",
+
+  // Container: builds from local Dockerfile, runs recon tools
+  "containers": [
+    {
+      "class_name": "ScannerContainer",
+      "image": "./container/Dockerfile",
+      "max_instances": 5,
+      "instance_type": "basic"
+    }
+  ],
+
+  // Durable Object binding — the Container class IS a Durable Object
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SCANNER",
+        "class_name": "ScannerContainer"
+      }
+    ]
+  },
+
+  // Required: use new_sqlite_classes (not new_classes) for container DOs
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["ScannerContainer"]
+    }
+  ],
+
+  // D1 database for scan history
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "site-intelligence-db",
+      "database_id": "your-d1-database-id"
+    }
+  ],
+
+  // R2 bucket for raw output archival
+  "r2_buckets": [
+    {
+      "binding": "ARCHIVE",
+      "bucket_name": "site-intelligence-archive"
+    }
+  ],
+
+  // Static frontend assets
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  // Environment variables (override via wrangler secret or .dev.vars)
+  "vars": {
+    "ALLOWED_ORIGIN": "https://your-domain.com"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}
