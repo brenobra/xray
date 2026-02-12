@@ -26,7 +26,7 @@ Browser → Cloudflare Worker (TypeScript)
 | Tool | Description | Repo |
 |------|-------------|------|
 | [wafw00f](https://github.com/EnableSecurity/wafw00f) | Identifies and fingerprints Web Application Firewalls (WAFs) by sending HTTP probes and analyzing responses | [EnableSecurity/wafw00f](https://github.com/EnableSecurity/wafw00f) |
-| [webtech](https://github.com/nicksahler/webtech) | Detects technologies used by websites — frameworks, CMS, CDNs, analytics, and more | [nicksahler/webtech](https://github.com/nicksahler/webtech) |
+| [webtech](https://github.com/ShielderSec/webtech) | Detects technologies used by websites — frameworks, CMS, CDNs, analytics, and more | [ShielderSec/webtech](https://github.com/ShielderSec/webtech) |
 | [SSLyze](https://github.com/nabla-c0d3/sslyze) | Analyzes TLS/SSL configuration — cipher suites, certificate chain, protocol support, and common misconfigurations | [nabla-c0d3/sslyze](https://github.com/nabla-c0d3/sslyze) |
 | [dnsx](https://github.com/projectdiscovery/dnsx) | Fast multi-purpose DNS toolkit — resolves A, AAAA, MX, NS, TXT, CNAME, and other record types | [projectdiscovery/dnsx](https://github.com/projectdiscovery/dnsx) |
 | [httpx](https://github.com/projectdiscovery/httpx) | Probes HTTP servers and extracts response headers, status codes, and metadata | [projectdiscovery/httpx](https://github.com/projectdiscovery/httpx) |
