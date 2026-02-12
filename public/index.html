@@ -1,34 +1,297 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>X-Ray — Site Intelligence</title>
+  <script>
+    (function(){var t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      safelist: [
+        'text-grade-a','text-grade-b','text-grade-c','text-grade-d','text-grade-f',
+        'bg-bar-good','bg-bar-mid','bg-bar-bad','bg-bar-track',
+        'bg-status-success','bg-status-success-muted','bg-status-danger','bg-status-danger-muted',
+        'bg-status-warning','bg-status-warning-muted','bg-status-info','bg-status-info-muted',
+        'bg-status-neutral',
+        'text-status-success','text-status-danger','text-status-warning','text-status-info',
+        'text-status-neutral','text-content-accent','text-content-muted','text-content-secondary',
+        'text-content','text-content-heading','text-content-faint',
+        'bg-surface-card','bg-surface-elevated','bg-surface-input','bg-surface-page',
+        'border-line','border-line-focus',
+        'bg-interest-high-bg','text-interest-high','border-interest-high-border',
+        'bg-interest-medium-bg','text-interest-medium','border-interest-medium-border',
+        'bg-interest-low-bg','text-interest-low','border-interest-low-border',
+        'bg-section-error','border-section-error','bg-section-warning','border-section-warning',
+        'bg-btn-primary','hover:bg-btn-primary-hover',
+        'bg-status-success/20','bg-status-info/20','bg-status-danger/20',
+        'hover:border-content-muted',
+      ],
+      theme: {
+        extend: {
+          colors: {
+            surface: {
+              page: 'var(--color-surface-page)',
+              card: 'var(--color-surface-card)',
+              elevated: 'var(--color-surface-elevated)',
+              input: 'var(--color-surface-input)',
+            },
+            content: {
+              DEFAULT: 'var(--color-content)',
+              heading: 'var(--color-content-heading)',
+              secondary: 'var(--color-content-secondary)',
+              muted: 'var(--color-content-muted)',
+              faint: 'var(--color-content-faint)',
+              accent: 'var(--color-content-accent)',
+            },
+            line: {
+              DEFAULT: 'var(--color-line)',
+              focus: 'var(--color-line-focus)',
+            },
+            btn: {
+              primary: 'var(--color-btn-primary)',
+              'primary-hover': 'var(--color-btn-primary-hover)',
+            },
+            status: {
+              success: 'var(--color-status-success)',
+              'success-muted': 'var(--color-status-success-muted)',
+              danger: 'var(--color-status-danger)',
+              'danger-muted': 'var(--color-status-danger-muted)',
+              warning: 'var(--color-status-warning)',
+              'warning-muted': 'var(--color-status-warning-muted)',
+              info: 'var(--color-status-info)',
+              'info-muted': 'var(--color-status-info-muted)',
+              neutral: 'var(--color-status-neutral)',
+            },
+            interest: {
+              high: 'var(--color-interest-high)',
+              'high-bg': 'var(--color-interest-high-bg)',
+              'high-border': 'var(--color-interest-high-border)',
+              medium: 'var(--color-interest-medium)',
+              'medium-bg': 'var(--color-interest-medium-bg)',
+              'medium-border': 'var(--color-interest-medium-border)',
+              low: 'var(--color-interest-low)',
+              'low-bg': 'var(--color-interest-low-bg)',
+              'low-border': 'var(--color-interest-low-border)',
+            },
+            grade: {
+              a: 'var(--color-grade-a)',
+              b: 'var(--color-grade-b)',
+              c: 'var(--color-grade-c)',
+              d: 'var(--color-grade-d)',
+              f: 'var(--color-grade-f)',
+            },
+            bar: {
+              good: 'var(--color-bar-good)',
+              mid: 'var(--color-bar-mid)',
+              bad: 'var(--color-bar-bad)',
+              track: 'var(--color-bar-track)',
+            },
+            section: {
+              error: 'var(--color-section-error-bg)',
+              'error-border': 'var(--color-section-error-border)',
+              warning: 'var(--color-section-warning-bg)',
+              'warning-border': 'var(--color-section-warning-border)',
+            },
+          },
+        },
+      },
+    }
+  </script>
   <style>
+    /* ── Theme: Dark ── */
+    [data-theme="dark"] {
+      --color-surface-page: #030712;
+      --color-surface-card: #111827;
+      --color-surface-elevated: #1f2937;
+      --color-surface-input: #111827;
+      --color-content: #f3f4f6;
+      --color-content-heading: #ffffff;
+      --color-content-secondary: #d1d5db;
+      --color-content-muted: #6b7280;
+      --color-content-faint: #4b5563;
+      --color-content-accent: #60a5fa;
+      --color-line: #1f2937;
+      --color-line-focus: #3b82f6;
+      --color-btn-primary: #2563eb;
+      --color-btn-primary-hover: #1d4ed8;
+      --color-status-success: #4ade80;
+      --color-status-success-muted: #22c55e;
+      --color-status-danger: #f87171;
+      --color-status-danger-muted: #ef4444;
+      --color-status-warning: #facc15;
+      --color-status-warning-muted: #eab308;
+      --color-status-info: #60a5fa;
+      --color-status-info-muted: #3b82f6;
+      --color-status-neutral: #6b7280;
+      --color-grade-a: #4ade80;
+      --color-grade-b: #60a5fa;
+      --color-grade-c: #facc15;
+      --color-grade-d: #fb923c;
+      --color-grade-f: #f87171;
+      --color-bar-good: #22c55e;
+      --color-bar-mid: #eab308;
+      --color-bar-bad: #ef4444;
+      --color-bar-track: #1f2937;
+      --color-interest-high: #f87171;
+      --color-interest-high-bg: rgba(127,29,29,0.4);
+      --color-interest-high-border: #991b1b;
+      --color-interest-medium: #facc15;
+      --color-interest-medium-bg: rgba(113,63,18,0.4);
+      --color-interest-medium-border: #854d0e;
+      --color-interest-low: #9ca3af;
+      --color-interest-low-bg: #1f2937;
+      --color-interest-low-border: #374151;
+      --color-section-error-bg: #450a0a;
+      --color-section-error-border: #991b1b;
+      --color-section-warning-bg: #422006;
+      --color-section-warning-border: #854d0e;
+    }
+
+    /* ── Theme: Light ── */
+    [data-theme="light"] {
+      --color-surface-page: #f8fafc;
+      --color-surface-card: #ffffff;
+      --color-surface-elevated: #f1f5f9;
+      --color-surface-input: #ffffff;
+      --color-content: #1e293b;
+      --color-content-heading: #0f172a;
+      --color-content-secondary: #475569;
+      --color-content-muted: #94a3b8;
+      --color-content-faint: #cbd5e1;
+      --color-content-accent: #2563eb;
+      --color-line: #e2e8f0;
+      --color-line-focus: #3b82f6;
+      --color-btn-primary: #2563eb;
+      --color-btn-primary-hover: #1d4ed8;
+      --color-status-success: #16a34a;
+      --color-status-success-muted: #22c55e;
+      --color-status-danger: #dc2626;
+      --color-status-danger-muted: #ef4444;
+      --color-status-warning: #ca8a04;
+      --color-status-warning-muted: #eab308;
+      --color-status-info: #2563eb;
+      --color-status-info-muted: #3b82f6;
+      --color-status-neutral: #6b7280;
+      --color-grade-a: #16a34a;
+      --color-grade-b: #2563eb;
+      --color-grade-c: #ca8a04;
+      --color-grade-d: #ea580c;
+      --color-grade-f: #dc2626;
+      --color-bar-good: #22c55e;
+      --color-bar-mid: #eab308;
+      --color-bar-bad: #ef4444;
+      --color-bar-track: #e2e8f0;
+      --color-interest-high: #dc2626;
+      --color-interest-high-bg: rgba(254,226,226,0.6);
+      --color-interest-high-border: #fca5a5;
+      --color-interest-medium: #ca8a04;
+      --color-interest-medium-bg: rgba(254,249,195,0.6);
+      --color-interest-medium-border: #fcd34d;
+      --color-interest-low: #6b7280;
+      --color-interest-low-bg: #f1f5f9;
+      --color-interest-low-border: #e2e8f0;
+      --color-section-error-bg: #fef2f2;
+      --color-section-error-border: #fca5a5;
+      --color-section-warning-bg: #fefce8;
+      --color-section-warning-border: #fcd34d;
+    }
+
+    /* ── Theme: Retro (Synthwave / CRT) ── */
+    [data-theme="retro"] {
+      --color-surface-page: #0a0a0a;
+      --color-surface-card: #1a0a2e;
+      --color-surface-elevated: #2d1b4e;
+      --color-surface-input: #1a0a2e;
+      --color-content: #00ff41;
+      --color-content-heading: #ff00ff;
+      --color-content-secondary: #00cc33;
+      --color-content-muted: #7b6f9e;
+      --color-content-faint: #4a3d6e;
+      --color-content-accent: #ff6ec7;
+      --color-line: #3d2a5c;
+      --color-line-focus: #ff00ff;
+      --color-btn-primary: #ff00ff;
+      --color-btn-primary-hover: #cc00cc;
+      --color-status-success: #00ff41;
+      --color-status-success-muted: #00cc33;
+      --color-status-danger: #ff3131;
+      --color-status-danger-muted: #cc2828;
+      --color-status-warning: #ffff00;
+      --color-status-warning-muted: #cccc00;
+      --color-status-info: #00bfff;
+      --color-status-info-muted: #0099cc;
+      --color-status-neutral: #7b6f9e;
+      --color-grade-a: #00ff41;
+      --color-grade-b: #00bfff;
+      --color-grade-c: #ffff00;
+      --color-grade-d: #ff6600;
+      --color-grade-f: #ff3131;
+      --color-bar-good: #00ff41;
+      --color-bar-mid: #ffff00;
+      --color-bar-bad: #ff3131;
+      --color-bar-track: #2d1b4e;
+      --color-interest-high: #ff3131;
+      --color-interest-high-bg: rgba(255,49,49,0.15);
+      --color-interest-high-border: #ff3131;
+      --color-interest-medium: #ffff00;
+      --color-interest-medium-bg: rgba(255,255,0,0.15);
+      --color-interest-medium-border: #ffff00;
+      --color-interest-low: #7b6f9e;
+      --color-interest-low-bg: #2d1b4e;
+      --color-interest-low-border: #3d2a5c;
+      --color-section-error-bg: rgba(255,49,49,0.1);
+      --color-section-error-border: #ff3131;
+      --color-section-warning-bg: rgba(255,255,0,0.1);
+      --color-section-warning-border: #ffff00;
+    }
+
+    /* ── Retro flourishes ── */
+    [data-theme="retro"] { font-family: 'Courier New', 'Lucida Console', monospace; }
+    [data-theme="retro"] body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
+      z-index: 9999;
+    }
+    [data-theme="retro"] .retro-glow { text-shadow: 0 0 8px currentColor; }
+
+    /* ── Global transitions ── */
+    *, *::before, *::after { transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+
     @keyframes scan-pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
     .scan-pulse { animation: scan-pulse 1.5s ease-in-out infinite; }
     .result-section { transition: all .3s ease; }
-    /* Tailwind CDN safelist — classes used in dynamic JS must exist in the DOM */
-    .hidden-safelist {
-      color: theme('colors.green.400') theme('colors.red.400') theme('colors.yellow.400')
-            theme('colors.blue.400') theme('colors.purple.400') theme('colors.gray.400')
-            theme('colors.orange.400') theme('colors.red.300') theme('colors.yellow.300');
-    }
     /* Subdomain chevron rotation */
     .rotate-90 { transform: rotate(90deg); }
   </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen">
+<body class="bg-surface-page text-content min-h-screen">
 
   <!-- Header -->
-  <header class="border-b border-gray-800 px-6 py-4">
+  <header class="border-b border-line px-6 py-4">
     <div class="max-w-6xl mx-auto flex items-center gap-3">
-      <h1 class="text-xl font-bold text-white tracking-tight">
-        <span class="text-blue-400">X</span>-Ray
+      <h1 class="text-xl font-bold text-content-heading tracking-tight">
+        <span class="text-content-accent retro-glow">X</span>-Ray
       </h1>
-      <span class="text-gray-600">|</span>
-      <span class="text-sm text-gray-500">Site Intelligence</span>
+      <span class="text-content-faint">|</span>
+      <span class="text-sm text-content-muted">Site Intelligence</span>
+      <!-- Theme Switcher -->
+      <div class="ml-auto flex items-center gap-1 bg-surface-elevated rounded-lg p-1" id="theme-switcher">
+        <button onclick="setTheme('dark')" data-theme-btn="dark" title="Dark theme" class="p-1.5 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+        <button onclick="setTheme('light')" data-theme-btn="light" title="Light theme" class="p-1.5 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </button>
+        <button onclick="setTheme('retro')" data-theme-btn="retro" title="Retro theme" class="p-1.5 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -41,25 +304,25 @@
           id="target-input"
           type="text"
           placeholder="Enter a URL or domain (e.g., example.com)"
-          class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          class="flex-1 bg-surface-input border border-line rounded-lg px-4 py-3 text-content-heading placeholder-content-muted focus:outline-none focus:border-line-focus focus:ring-1 focus:ring-line-focus"
           onkeydown="if(event.key==='Enter')startScan()"
         />
         <button
           id="scan-btn"
           onclick="startScan()"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="bg-btn-primary hover:bg-btn-primary-hover text-content-heading font-medium px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >Scan</button>
       </div>
     </div>
 
     <!-- Loading -->
     <div id="loading" class="hidden mb-8">
-      <div class="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div class="bg-surface-card border border-line rounded-lg p-6">
         <div class="flex items-center gap-3 scan-pulse">
-          <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-          <span class="text-gray-300">Scanning target&hellip; This may take up to 2 minutes.</span>
+          <div class="w-3 h-3 bg-status-info-muted rounded-full"></div>
+          <span class="text-content-secondary">Scanning target&hellip; This may take up to 2 minutes.</span>
         </div>
-        <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-gray-500">
+        <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-content-muted">
           <span>WAF Detection&hellip;</span>
           <span>Tech Stack&hellip;</span>
           <span>TLS Analysis&hellip;</span>
@@ -74,8 +337,8 @@
 
     <!-- Error -->
     <div id="error" class="hidden mb-8">
-      <div class="bg-red-950 border border-red-800 rounded-lg p-4">
-        <p class="text-red-400" id="error-msg"></p>
+      <div class="bg-section-error border border-section-error-border rounded-lg p-4">
+        <p class="text-status-danger" id="error-msg"></p>
       </div>
     </div>
 
@@ -83,62 +346,62 @@
     <div id="results" class="hidden space-y-6">
       <!-- Summary Bar -->
       <div class="flex items-center justify-between gap-4">
-        <div id="summary-bar" class="bg-gray-900 border border-gray-800 rounded-lg p-4 flex flex-wrap gap-3 text-sm flex-1"></div>
+        <div id="summary-bar" class="bg-surface-card border border-line rounded-lg p-4 flex flex-wrap gap-3 text-sm flex-1"></div>
         <div class="flex gap-2 flex-shrink-0">
-          <button onclick="exportJSON()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg transition-colors">Export JSON</button>
-          <button onclick="exportCSV()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg transition-colors">Export CSV</button>
+          <button onclick="exportJSON()" class="text-xs bg-surface-elevated hover:bg-surface-card text-content-secondary px-3 py-2 rounded-lg transition-colors">Export JSON</button>
+          <button onclick="exportCSV()" class="text-xs bg-surface-elevated hover:bg-surface-card text-content-secondary px-3 py-2 rounded-lg transition-colors">Export CSV</button>
         </div>
       </div>
 
       <!-- Security Score (full width) -->
-      <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
-        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Security Score</h3>
+      <div class="result-section bg-surface-card border border-line rounded-lg p-5">
+        <h3 class="text-sm font-semibold text-content-muted uppercase tracking-wider mb-3">Security Score</h3>
         <div id="score-content"></div>
       </div>
 
       <!-- 6 Result Cards -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
-          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">WAF Detection</h3>
+        <div class="result-section bg-surface-card border border-line rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-content-muted uppercase tracking-wider mb-3">WAF Detection</h3>
           <div id="waf-content"></div>
         </div>
-        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
-          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Technologies</h3>
+        <div class="result-section bg-surface-card border border-line rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-content-muted uppercase tracking-wider mb-3">Technologies</h3>
           <div id="tech-content"></div>
         </div>
-        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
-          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">TLS / SSL</h3>
+        <div class="result-section bg-surface-card border border-line rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-content-muted uppercase tracking-wider mb-3">TLS / SSL</h3>
           <div id="tls-content"></div>
         </div>
-        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
-          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">DNS Records</h3>
+        <div class="result-section bg-surface-card border border-line rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-content-muted uppercase tracking-wider mb-3">DNS Records</h3>
           <div id="dns-content"></div>
         </div>
-        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
-          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">HTTP Headers</h3>
+        <div class="result-section bg-surface-card border border-line rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-content-muted uppercase tracking-wider mb-3">HTTP Headers</h3>
           <div id="headers-content"></div>
         </div>
-        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
-          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">IP Information</h3>
+        <div class="result-section bg-surface-card border border-line rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-content-muted uppercase tracking-wider mb-3">IP Information</h3>
           <div id="ip-content"></div>
         </div>
-        <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
-          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">WHOIS</h3>
+        <div class="result-section bg-surface-card border border-line rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-content-muted uppercase tracking-wider mb-3">WHOIS</h3>
           <div id="whois-content"></div>
         </div>
       </div>
 
       <!-- Subdomains (full width — rich categorized view) -->
-      <div class="result-section bg-gray-900 border border-gray-800 rounded-lg p-5">
-        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Subdomains</h3>
+      <div class="result-section bg-surface-card border border-line rounded-lg p-5">
+        <h3 class="text-sm font-semibold text-content-muted uppercase tracking-wider mb-3">Subdomains</h3>
         <div id="subdomains-content"></div>
       </div>
 
       <!-- Errors (if any) -->
       <div id="scan-errors" class="hidden">
-        <div class="bg-yellow-950 border border-yellow-800 rounded-lg p-4">
-          <h4 class="text-sm font-semibold text-yellow-400 mb-2">Partial Results — Some tools encountered errors:</h4>
-          <ul id="scan-errors-list" class="text-sm text-yellow-300 list-disc list-inside space-y-1"></ul>
+        <div class="bg-section-warning border border-section-warning-border rounded-lg p-4">
+          <h4 class="text-sm font-semibold text-status-warning mb-2">Partial Results — Some tools encountered errors:</h4>
+          <ul id="scan-errors-list" class="text-sm text-status-warning list-disc list-inside space-y-1"></ul>
         </div>
       </div>
     </div>
@@ -146,19 +409,19 @@
     <!-- Scan History -->
     <div class="mt-12">
       <div class="flex items-center justify-between mb-4 gap-3">
-        <h2 class="text-lg font-semibold text-gray-300">Recent Scans</h2>
+        <h2 class="text-lg font-semibold text-content-secondary">Recent Scans</h2>
         <div class="flex gap-2">
           <input
             id="history-search"
             type="text"
             placeholder="Search domains..."
             oninput="onHistorySearch()"
-            class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 w-48"
+            class="bg-surface-input border border-line rounded-lg px-3 py-1.5 text-sm text-content-heading placeholder-content-muted focus:outline-none focus:border-line-focus w-48"
           />
           <select
             id="history-filter"
             onchange="onHistoryFilter()"
-            class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:outline-none focus:border-blue-500"
+            class="bg-surface-input border border-line rounded-lg px-3 py-1.5 text-sm text-content-secondary focus:outline-none focus:border-line-focus"
           >
             <option value="">All statuses</option>
             <option value="completed">Completed</option>
@@ -168,12 +431,12 @@
         </div>
       </div>
       <div id="history-list" class="space-y-2">
-        <p class="text-gray-600 text-sm">Loading history&hellip;</p>
+        <p class="text-content-faint text-sm">Loading history&hellip;</p>
       </div>
       <button
         id="history-load-more"
         onclick="loadMoreHistory()"
-        class="hidden mt-4 w-full bg-gray-900 border border-gray-800 hover:border-gray-600 text-gray-400 text-sm py-2 rounded-lg transition-colors"
+        class="hidden mt-4 w-full bg-surface-card border border-line hover:border-content-muted text-content-muted text-sm py-2 rounded-lg transition-colors"
       >Load More</button>
     </div>
 

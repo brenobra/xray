@@ -1,4 +1,31 @@
 // =========================================================================
+// Theme Switching
+// =========================================================================
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  updateThemeButtons();
+}
+
+function updateThemeButtons() {
+  var current = document.documentElement.getAttribute('data-theme') || 'dark';
+  var btns = document.querySelectorAll('[data-theme-btn]');
+  for (var i = 0; i < btns.length; i++) {
+    var btn = btns[i];
+    if (btn.getAttribute('data-theme-btn') === current) {
+      btn.classList.add('bg-surface-card', 'text-content-accent');
+      btn.classList.remove('text-content-muted');
+    } else {
+      btn.classList.remove('bg-surface-card', 'text-content-accent');
+      btn.classList.add('text-content-muted');
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', updateThemeButtons);
+
+// =========================================================================
 // Frontend Logic
 // =========================================================================
 
@@ -166,22 +193,22 @@ async function startScan() {
 // =========================================================================
 
 function gradeColor(grade) {
-  if (grade === 'A') return 'green';
-  if (grade === 'B') return 'blue';
-  if (grade === 'C') return 'yellow';
-  if (grade === 'D') return 'orange';
-  return 'red';
+  if (grade === 'A') return 'text-grade-a';
+  if (grade === 'B') return 'text-grade-b';
+  if (grade === 'C') return 'text-grade-c';
+  if (grade === 'D') return 'text-grade-d';
+  return 'text-grade-f';
 }
 
 function renderSecurityScore(score) {
   var el = document.getElementById('score-content');
-  if (!score) { el.innerHTML = '<span class="text-gray-500">N/A</span>'; return; }
+  if (!score) { el.innerHTML = '<span class="text-content-muted">N/A</span>'; return; }
 
   var gc = gradeColor(score.grade);
   var h = '<div class="flex items-center gap-4 mb-4">';
-  h += '<div class="text-4xl font-bold text-' + gc + '-400">' + esc(score.grade) + '</div>';
-  h += '<div><div class="text-2xl font-semibold text-white">' + score.score + '<span class="text-sm text-gray-500">/100</span></div>';
-  h += '<div class="text-xs text-gray-500">Security Score</div></div>';
+  h += '<div class="text-4xl font-bold ' + gc + '">' + esc(score.grade) + '</div>';
+  h += '<div><div class="text-2xl font-semibold text-content-heading">' + score.score + '<span class="text-sm text-content-muted">/100</span></div>';
+  h += '<div class="text-xs text-content-muted">Security Score</div></div>';
   h += '</div>';
 
   // Breakdown bars
@@ -196,11 +223,11 @@ function renderSecurityScore(score) {
     h += '<div class="space-y-2">';
     cats.forEach(function(c) {
       var pct = c.max > 0 ? Math.round((c.val / c.max) * 100) : 0;
-      var barColor = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+      var barColor = pct >= 80 ? 'bg-bar-good' : pct >= 50 ? 'bg-bar-mid' : 'bg-bar-bad';
       h += '<div class="flex items-center gap-2 text-xs">';
-      h += '<span class="text-gray-500 w-20">' + esc(c.label) + '</span>';
-      h += '<div class="flex-1 bg-gray-800 rounded-full h-1.5"><div class="' + barColor + ' h-1.5 rounded-full" style="width:' + pct + '%"></div></div>';
-      h += '<span class="text-gray-400 w-10 text-right">' + c.val + '/' + c.max + '</span>';
+      h += '<span class="text-content-muted w-20">' + esc(c.label) + '</span>';
+      h += '<div class="flex-1 bg-bar-track rounded-full h-1.5"><div class="' + barColor + ' h-1.5 rounded-full" style="width:' + pct + '%"></div></div>';
+      h += '<span class="text-content-secondary w-10 text-right">' + c.val + '/' + c.max + '</span>';
       h += '</div>';
     });
     h += '</div>';
@@ -210,9 +237,9 @@ function renderSecurityScore(score) {
   var recs = score.recommendations || [];
   if (recs.length) {
     h += '<div class="mt-4 space-y-1">';
-    h += '<div class="text-xs text-gray-500 font-semibold mb-1">Recommendations</div>';
+    h += '<div class="text-xs text-content-muted font-semibold mb-1">Recommendations</div>';
     recs.forEach(function(r) {
-      h += '<div class="text-xs text-gray-400">&bull; ' + esc(r) + '</div>';
+      h += '<div class="text-xs text-content-secondary">&bull; ' + esc(r) + '</div>';
     });
     h += '</div>';
   }
@@ -230,16 +257,16 @@ function renderResults(data) {
 
   // Summary
   var parts = [];
-  parts.push(badge('Target', data.target, 'blue'));
-  parts.push(badge('Duration', ((data.duration_ms || 0) / 1000).toFixed(1) + 's', 'gray'));
+  parts.push(badge('Target', data.target, 'text-content-accent'));
+  parts.push(badge('Duration', ((data.duration_ms || 0) / 1000).toFixed(1) + 's', 'text-content-muted'));
   if (data.security_score) {
     var gc = gradeColor(data.security_score.grade);
     parts.push(badge('Grade', data.security_score.grade + ' (' + data.security_score.score + '/100)', gc));
   }
-  if (data.waf && data.waf.detected) parts.push(badge('WAF', data.waf.provider, 'yellow'));
-  if (data.dns && data.dns.cdn_detected) parts.push(badge('CDN', data.dns.cdn_detected, 'green'));
+  if (data.waf && data.waf.detected) parts.push(badge('WAF', data.waf.provider, 'text-status-warning'));
+  if (data.dns && data.dns.cdn_detected) parts.push(badge('CDN', data.dns.cdn_detected, 'text-status-success'));
   var protos = (data.tls && data.tls.protocols) ? data.tls.protocols.join(', ') : 'N/A';
-  parts.push(badge('TLS', protos, 'purple'));
+  parts.push(badge('TLS', protos, 'text-content-accent'));
   document.getElementById('summary-bar').innerHTML = parts.join('');
 
   // Security Score
@@ -248,34 +275,34 @@ function renderResults(data) {
   // WAF
   var waf = data.waf || {};
   document.getElementById('waf-content').innerHTML = waf.detected
-    ? '<div class="flex items-center gap-2"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span><span class="text-yellow-400 font-medium">' + esc(waf.provider) + '</span></div>'
-      + (waf.details ? '<pre class="mt-2 text-xs text-gray-500 overflow-x-auto">' + esc(JSON.stringify(waf.details, null, 2)) + '</pre>' : '')
-    : '<div class="flex items-center gap-2"><span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-green-400">No WAF detected</span></div>';
+    ? '<div class="flex items-center gap-2"><span class="w-2 h-2 bg-status-warning-muted rounded-full"></span><span class="text-status-warning font-medium">' + esc(waf.provider) + '</span></div>'
+      + (waf.details ? '<pre class="mt-2 text-xs text-content-muted overflow-x-auto">' + esc(JSON.stringify(waf.details, null, 2)) + '</pre>' : '')
+    : '<div class="flex items-center gap-2"><span class="w-2 h-2 bg-status-success-muted rounded-full"></span><span class="text-status-success">No WAF detected</span></div>';
 
   // Technologies
   var techs = data.technologies || [];
   document.getElementById('tech-content').innerHTML = techs.length
     ? techs.map(function(t) {
         var label = esc(t.name);
-        if (t.version) label += ' <span class="text-gray-500">' + esc(t.version) + '</span>';
-        if (t.category && t.category !== 'Unknown') label += ' <span class="text-gray-600 text-xs">(' + esc(t.category) + ')</span>';
-        return '<span class="inline-block bg-gray-800 text-gray-300 text-xs px-2.5 py-1 rounded mr-1.5 mb-1.5">' + label + '</span>';
+        if (t.version) label += ' <span class="text-content-muted">' + esc(t.version) + '</span>';
+        if (t.category && t.category !== 'Unknown') label += ' <span class="text-content-faint text-xs">(' + esc(t.category) + ')</span>';
+        return '<span class="inline-block bg-surface-elevated text-content-secondary text-xs px-2.5 py-1 rounded mr-1.5 mb-1.5">' + label + '</span>';
       }).join('')
-    : '<span class="text-gray-500">No technologies detected</span>';
+    : '<span class="text-content-muted">No technologies detected</span>';
 
   // TLS
   var tls = data.tls || {};
   var tlsH = '<div class="space-y-2 text-sm">';
-  tlsH += '<div><span class="text-gray-500">Protocols:</span> ' + esc((tls.protocols || []).join(', ') || 'N/A') + '</div>';
+  tlsH += '<div><span class="text-content-muted">Protocols:</span> ' + esc((tls.protocols || []).join(', ') || 'N/A') + '</div>';
   var ciphers = (tls.cipher_suites || []).slice(0, 6);
-  tlsH += '<div><span class="text-gray-500">Ciphers:</span> ' + esc(ciphers.join(', ') || 'N/A');
-  if ((tls.cipher_suites || []).length > 6) tlsH += ' <span class="text-gray-600">+ ' + (tls.cipher_suites.length - 6) + ' more</span>';
+  tlsH += '<div><span class="text-content-muted">Ciphers:</span> ' + esc(ciphers.join(', ') || 'N/A');
+  if ((tls.cipher_suites || []).length > 6) tlsH += ' <span class="text-content-faint">+ ' + (tls.cipher_suites.length - 6) + ' more</span>';
   tlsH += '</div>';
   if (tls.certificate) {
-    tlsH += '<div><span class="text-gray-500">Issuer:</span> ' + esc(tls.certificate.issuer || 'N/A') + '</div>';
-    tlsH += '<div><span class="text-gray-500">Expiry:</span> ' + esc(tls.certificate.expiry || 'N/A') + '</div>';
+    tlsH += '<div><span class="text-content-muted">Issuer:</span> ' + esc(tls.certificate.issuer || 'N/A') + '</div>';
+    tlsH += '<div><span class="text-content-muted">Expiry:</span> ' + esc(tls.certificate.expiry || 'N/A') + '</div>';
     if (tls.certificate.san && tls.certificate.san.length) {
-      tlsH += '<div><span class="text-gray-500">SANs:</span> ' + esc(tls.certificate.san.join(', ')) + '</div>';
+      tlsH += '<div><span class="text-content-muted">SANs:</span> ' + esc(tls.certificate.san.join(', ')) + '</div>';
     }
   }
   tlsH += '</div>';
@@ -288,15 +315,15 @@ function renderResults(data) {
   dnsH += dnsRow('CNAME', dns.cname_records);
   dnsH += dnsRow('NS', dns.ns_records);
   dnsH += dnsRow('MX', dns.mx_records);
-  if (dns.cdn_detected) dnsH += '<div><span class="text-gray-500">CDN:</span> <span class="text-green-400">' + esc(dns.cdn_detected) + '</span></div>';
-  if (dns.hosting_provider) dnsH += '<div><span class="text-gray-500">Hosting:</span> ' + esc(dns.hosting_provider) + '</div>';
+  if (dns.cdn_detected) dnsH += '<div><span class="text-content-muted">CDN:</span> <span class="text-status-success">' + esc(dns.cdn_detected) + '</span></div>';
+  if (dns.hosting_provider) dnsH += '<div><span class="text-content-muted">Hosting:</span> ' + esc(dns.hosting_provider) + '</div>';
   dnsH += '</div>';
   document.getElementById('dns-content').innerHTML = dnsH;
 
   // Headers
   var hdrs = data.headers || {};
   var hH = '<div class="space-y-2 text-sm">';
-  hH += '<div><span class="text-gray-500">Server:</span> ' + esc(hdrs.server || 'N/A') + '</div>';
+  hH += '<div><span class="text-content-muted">Server:</span> ' + esc(hdrs.server || 'N/A') + '</div>';
   var sec = hdrs.security_headers || {};
   var secKeys = Object.keys(sec);
   if (secKeys.length) {
@@ -305,11 +332,11 @@ function renderResults(data) {
       var v = sec[k];
       var present = v && v !== 'missing' && v !== '';
       hH += '<div class="flex items-center gap-2">';
-      hH += '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ' + (present ? 'bg-green-500' : 'bg-red-500') + '"></span>';
-      hH += '<span class="text-gray-400 font-mono text-xs">' + esc(k) + '</span>';
+      hH += '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ' + (present ? 'bg-status-success-muted' : 'bg-status-danger-muted') + '"></span>';
+      hH += '<span class="text-content-secondary font-mono text-xs">' + esc(k) + '</span>';
       hH += present
-        ? '<span class="text-green-400 text-xs">Present</span>'
-        : '<span class="text-red-400 text-xs">Missing</span>';
+        ? '<span class="text-status-success text-xs">Present</span>'
+        : '<span class="text-status-danger text-xs">Missing</span>';
       hH += '</div>';
     });
     hH += '</div>';
@@ -321,22 +348,22 @@ function renderResults(data) {
   var ip = data.ip_info || {};
   document.getElementById('ip-content').innerHTML =
     '<div class="space-y-2 text-sm">' +
-    '<div><span class="text-gray-500">IP Address:</span> ' + esc(ip.ip || 'N/A') + '</div>' +
-    '<div><span class="text-gray-500">ASN:</span> ' + esc(ip.asn || 'N/A') + '</div>' +
-    '<div><span class="text-gray-500">Organization:</span> ' + esc(ip.org || 'N/A') + '</div>' +
+    '<div><span class="text-content-muted">IP Address:</span> ' + esc(ip.ip || 'N/A') + '</div>' +
+    '<div><span class="text-content-muted">ASN:</span> ' + esc(ip.asn || 'N/A') + '</div>' +
+    '<div><span class="text-content-muted">Organization:</span> ' + esc(ip.org || 'N/A') + '</div>' +
     '</div>';
 
   // WHOIS
   var whois = data.whois || {};
   var wH = '<div class="space-y-2 text-sm">';
-  if (whois.registrar) wH += '<div><span class="text-gray-500">Registrar:</span> ' + esc(whois.registrar) + '</div>';
-  if (whois.registrant_org) wH += '<div><span class="text-gray-500">Organization:</span> ' + esc(whois.registrant_org) + '</div>';
-  if (whois.creation_date) wH += '<div><span class="text-gray-500">Created:</span> ' + esc(whois.creation_date) + '</div>';
-  if (whois.expiry_date) wH += '<div><span class="text-gray-500">Expires:</span> ' + esc(whois.expiry_date) + '</div>';
-  if (whois.updated_date) wH += '<div><span class="text-gray-500">Updated:</span> ' + esc(whois.updated_date) + '</div>';
-  if (whois.nameservers && whois.nameservers.length) wH += '<div><span class="text-gray-500">Nameservers:</span> ' + whois.nameservers.map(function(n) { return esc(n); }).join(', ') + '</div>';
-  if (whois.status && whois.status.length) wH += '<div><span class="text-gray-500">Status:</span> ' + whois.status.map(function(s) { return '<span class="inline-block bg-gray-800 text-gray-300 text-xs px-2 py-0.5 rounded mr-1 mb-1">' + esc(s) + '</span>'; }).join('') + '</div>';
-  if (wH === '<div class="space-y-2 text-sm">') wH += '<span class="text-gray-500">No WHOIS data available</span>';
+  if (whois.registrar) wH += '<div><span class="text-content-muted">Registrar:</span> ' + esc(whois.registrar) + '</div>';
+  if (whois.registrant_org) wH += '<div><span class="text-content-muted">Organization:</span> ' + esc(whois.registrant_org) + '</div>';
+  if (whois.creation_date) wH += '<div><span class="text-content-muted">Created:</span> ' + esc(whois.creation_date) + '</div>';
+  if (whois.expiry_date) wH += '<div><span class="text-content-muted">Expires:</span> ' + esc(whois.expiry_date) + '</div>';
+  if (whois.updated_date) wH += '<div><span class="text-content-muted">Updated:</span> ' + esc(whois.updated_date) + '</div>';
+  if (whois.nameservers && whois.nameservers.length) wH += '<div><span class="text-content-muted">Nameservers:</span> ' + whois.nameservers.map(function(n) { return esc(n); }).join(', ') + '</div>';
+  if (whois.status && whois.status.length) wH += '<div><span class="text-content-muted">Status:</span> ' + whois.status.map(function(s) { return '<span class="inline-block bg-surface-elevated text-content-secondary text-xs px-2 py-0.5 rounded mr-1 mb-1">' + esc(s) + '</span>'; }).join('') + '</div>';
+  if (wH === '<div class="space-y-2 text-sm">') wH += '<span class="text-content-muted">No WHOIS data available</span>';
   wH += '</div>';
   document.getElementById('whois-content').innerHTML = wH;
 
@@ -350,16 +377,16 @@ function renderResults(data) {
     // --- Interest summary pills (double as filters) ---
     var stats = subs.stats || {};
     sH += '<div class="flex items-center gap-2 mb-3 flex-wrap">';
-    sH += '<span class="text-gray-500 text-sm">' + subList.length + ' subdomain' + (subList.length !== 1 ? 's' : '') + '</span>';
-    if (stats.high_interest) sH += '<button onclick="toggleSubFilter(\'high\')" data-sub-filter="high" class="sub-filter-pill active text-xs px-2.5 py-1 rounded-full bg-red-900/40 text-red-400 border border-red-800 hover:bg-red-900/60 transition-colors">' + stats.high_interest + ' High</button>';
-    if (stats.medium_interest) sH += '<button onclick="toggleSubFilter(\'medium\')" data-sub-filter="medium" class="sub-filter-pill active text-xs px-2.5 py-1 rounded-full bg-yellow-900/40 text-yellow-400 border border-yellow-800 hover:bg-yellow-900/60 transition-colors">' + stats.medium_interest + ' Medium</button>';
-    if (stats.low_interest) sH += '<button onclick="toggleSubFilter(\'low\')" data-sub-filter="low" class="sub-filter-pill active text-xs px-2.5 py-1 rounded-full bg-gray-800 text-gray-400 border border-gray-700 hover:bg-gray-700 transition-colors">' + stats.low_interest + ' Low</button>';
+    sH += '<span class="text-content-muted text-sm">' + subList.length + ' subdomain' + (subList.length !== 1 ? 's' : '') + '</span>';
+    if (stats.high_interest) sH += '<button onclick="toggleSubFilter(\'high\')" data-sub-filter="high" class="sub-filter-pill active text-xs px-2.5 py-1 rounded-full bg-interest-high-bg text-interest-high border border-interest-high-border hover:opacity-80 transition-colors">' + stats.high_interest + ' High</button>';
+    if (stats.medium_interest) sH += '<button onclick="toggleSubFilter(\'medium\')" data-sub-filter="medium" class="sub-filter-pill active text-xs px-2.5 py-1 rounded-full bg-interest-medium-bg text-interest-medium border border-interest-medium-border hover:opacity-80 transition-colors">' + stats.medium_interest + ' Medium</button>';
+    if (stats.low_interest) sH += '<button onclick="toggleSubFilter(\'low\')" data-sub-filter="low" class="sub-filter-pill active text-xs px-2.5 py-1 rounded-full bg-interest-low-bg text-interest-low border border-interest-low-border hover:opacity-80 transition-colors">' + stats.low_interest + ' Low</button>';
     sH += '</div>';
 
     // --- Build category sections ordered by interest ---
     var interestOrder = { high: 0, medium: 1, low: 2 };
-    var catColorDot = { high: 'bg-red-500', medium: 'bg-yellow-500', low: 'bg-gray-500' };
-    var catTagBg = { high: 'bg-red-900/30 text-red-300 border border-red-900/50', medium: 'bg-yellow-900/30 text-yellow-300 border border-yellow-900/50', low: 'bg-gray-800 text-gray-300' };
+    var catColorDot = { high: 'bg-status-danger-muted', medium: 'bg-status-warning-muted', low: 'bg-status-neutral' };
+    var catTagBg = { high: 'bg-interest-high-bg text-interest-high border border-interest-high-border', medium: 'bg-interest-medium-bg text-interest-medium border border-interest-medium-border', low: 'bg-interest-low-bg text-interest-low' };
 
     // Group classified items by category while preserving order
     var catGroups = [];
@@ -382,18 +409,18 @@ function renderResults(data) {
 
     sH += '<div class="space-y-3">';
     catGroups.forEach(function(cat, catIdx) {
-      var dotClass = catColorDot[cat.interest] || 'bg-gray-500';
-      var tagClass = catTagBg[cat.interest] || 'bg-gray-800 text-gray-300';
+      var dotClass = catColorDot[cat.interest] || 'bg-status-neutral';
+      var tagClass = catTagBg[cat.interest] || 'bg-interest-low-bg text-interest-low';
       var defaultOpen = cat.interest === 'high';
 
       sH += '<div class="sub-category-section" data-interest="' + esc(cat.interest) + '">';
       // Header
       sH += '<button onclick="toggleSubCategory(this)" class="flex items-center gap-2 w-full text-left group">';
       sH += '<span class="w-2 h-2 rounded-full flex-shrink-0 ' + dotClass + '"></span>';
-      sH += '<span class="text-sm font-medium text-gray-200">' + esc(cat.name) + '</span>';
-      sH += '<span class="text-xs text-gray-500">(' + cat.items.length + ')</span>';
-      sH += '<span class="text-xs text-gray-600 ml-1">' + esc(cat.cf_opportunity) + '</span>';
-      sH += '<svg class="sub-chevron w-3.5 h-3.5 text-gray-600 ml-auto transition-transform ' + (defaultOpen ? 'rotate-90' : '') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+      sH += '<span class="text-sm font-medium text-content">' + esc(cat.name) + '</span>';
+      sH += '<span class="text-xs text-content-muted">(' + cat.items.length + ')</span>';
+      sH += '<span class="text-xs text-content-faint ml-1">' + esc(cat.cf_opportunity) + '</span>';
+      sH += '<svg class="sub-chevron w-3.5 h-3.5 text-content-faint ml-auto transition-transform ' + (defaultOpen ? 'rotate-90' : '') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
       sH += '</button>';
 
       // Body
@@ -410,9 +437,9 @@ function renderResults(data) {
       groups.forEach(function(g, gIdx) {
         var gId = 'subgrp-' + catIdx + '-' + gIdx;
         sH += '<div class="w-full">';
-        sH += '<button onclick="toggleSubGroup(\'' + gId + '\')" class="text-xs text-gray-400 hover:text-gray-200 font-mono flex items-center gap-1">';
+        sH += '<button onclick="toggleSubGroup(\'' + gId + '\')" class="text-xs text-content-secondary hover:text-content font-mono flex items-center gap-1">';
         sH += '<svg class="sub-grp-chevron w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
-        sH += esc(g.prefix) + ' <span class="text-gray-600">(' + g.count + ')</span>';
+        sH += esc(g.prefix) + ' <span class="text-content-faint">(' + g.count + ')</span>';
         sH += '</button>';
         sH += '<div id="' + gId + '" class="hidden mt-1 flex flex-wrap gap-1.5 pl-4">';
         g.members.forEach(function(m) {
@@ -434,16 +461,16 @@ function renderResults(data) {
 
   } else if (subList.length) {
     // Fallback: old scan data without classification
-    sH += '<div class="mb-2 text-sm"><span class="text-gray-500">Found:</span> <span class="text-blue-400 font-medium">' + subList.length + ' subdomain' + (subList.length !== 1 ? 's' : '') + '</span></div>';
+    sH += '<div class="mb-2 text-sm"><span class="text-content-muted">Found:</span> <span class="text-content-accent font-medium">' + subList.length + ' subdomain' + (subList.length !== 1 ? 's' : '') + '</span></div>';
     var shown = subList.slice(0, 20);
     sH += '<div class="flex flex-wrap gap-1.5">';
     shown.forEach(function(sub) {
-      sH += '<span class="inline-block bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded font-mono">' + esc(sub) + '</span>';
+      sH += '<span class="inline-block bg-surface-elevated text-content-secondary text-xs px-2 py-1 rounded font-mono">' + esc(sub) + '</span>';
     });
-    if (subList.length > 20) sH += '<span class="text-gray-500 text-xs self-center">+ ' + (subList.length - 20) + ' more</span>';
+    if (subList.length > 20) sH += '<span class="text-content-muted text-xs self-center">+ ' + (subList.length - 20) + ' more</span>';
     sH += '</div>';
   } else {
-    sH = '<span class="text-gray-500 text-sm">No subdomains found</span>';
+    sH = '<span class="text-content-muted text-sm">No subdomains found</span>';
   }
   document.getElementById('subdomains-content').innerHTML = sH;
 
@@ -462,13 +489,13 @@ function renderResults(data) {
 
 function dnsRow(label, records) {
   if (!records || !records.length) return '';
-  return '<div><span class="text-gray-500">' + esc(label) + ':</span> ' + records.map(function(r) { return esc(r); }).join(', ') + '</div>';
+  return '<div><span class="text-content-muted">' + esc(label) + ':</span> ' + records.map(function(r) { return esc(r); }).join(', ') + '</div>';
 }
 
-function badge(label, value, color) {
-  return '<div class="bg-gray-800 rounded px-3 py-1.5">'
-    + '<span class="text-gray-500 text-xs">' + esc(label) + '</span> '
-    + '<span class="text-' + color + '-400 text-sm font-medium">' + esc(value || 'N/A') + '</span>'
+function badge(label, value, textClass) {
+  return '<div class="bg-surface-elevated rounded px-3 py-1.5">'
+    + '<span class="text-content-muted text-xs">' + esc(label) + '</span> '
+    + '<span class="' + textClass + ' text-sm font-medium">' + esc(value || 'N/A') + '</span>'
     + '</div>';
 }
 
@@ -504,20 +531,25 @@ async function loadHistory(cursor) {
     historyNextCursor = data.next_cursor || null;
 
     if (!data.scans || !data.scans.length) {
-      el.innerHTML = '<p class="text-gray-600 text-sm">No scans found.</p>';
+      el.innerHTML = '<p class="text-content-faint text-sm">No scans found.</p>';
       document.getElementById('history-load-more').classList.add('hidden');
       return;
     }
 
+    var statusStyles = {
+      completed: 'bg-status-success/20 text-status-success',
+      running: 'bg-status-info/20 text-status-info',
+      failed: 'bg-status-danger/20 text-status-danger',
+      pending: 'bg-surface-elevated text-content-muted'
+    };
     var html = data.scans.map(function(s) {
-      var statusColors = { completed: 'green', running: 'blue', failed: 'red', pending: 'gray' };
-      var c = statusColors[s.status] || 'gray';
+      var sc = statusStyles[s.status] || statusStyles.pending;
       var dur = s.duration_ms ? ' (' + (s.duration_ms / 1000).toFixed(1) + 's)' : '';
-      return '<div class="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 text-sm cursor-pointer hover:border-gray-600 transition-colors" data-scan-id="' + esc(s.id) + '">'
-        + '<span class="text-gray-300 truncate max-w-md">' + esc(s.target) + '</span>'
+      return '<div class="flex items-center justify-between bg-surface-card border border-line rounded-lg px-4 py-3 text-sm cursor-pointer hover:border-content-muted transition-colors" data-scan-id="' + esc(s.id) + '">'
+        + '<span class="text-content-secondary truncate max-w-md">' + esc(s.target) + '</span>'
         + '<div class="flex items-center gap-3 flex-shrink-0">'
-        + '<span class="text-gray-600 text-xs">' + esc(new Date(s.created_at + 'Z').toLocaleString()) + esc(dur) + '</span>'
-        + '<span class="text-xs px-2 py-0.5 rounded-full bg-' + c + '-900 text-' + c + '-400">' + esc(s.status) + '</span>'
+        + '<span class="text-content-faint text-xs">' + esc(new Date(s.created_at + 'Z').toLocaleString()) + esc(dur) + '</span>'
+        + '<span class="text-xs px-2 py-0.5 rounded-full ' + sc + '">' + esc(s.status) + '</span>'
         + '</div></div>';
     }).join('');
 
