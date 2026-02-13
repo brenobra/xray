@@ -50,6 +50,11 @@
     }
   ],
 
+  // Workers AI binding for Cloudflare Opportunity Reports
+  "ai": {
+    "binding": "AI"
+  },
+
   // Static frontend assets
   "assets": {
     "directory": "./public",

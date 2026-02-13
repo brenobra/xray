@@ -4,6 +4,7 @@ import { corsHeaders, jsonResponse } from "./lib/response";
 import { handleScan } from "./handlers/scan";
 import { handleHistory } from "./handlers/history";
 import { handleGetScan } from "./handlers/get-scan";
+import { handleAnalyze } from "./handlers/analyze";
 
 // =============================================================================
 // Container Durable Object
@@ -48,6 +49,13 @@ export default {
       }
       if (path === "/api/history" && request.method === "GET") {
         return await handleHistory(request, env);
+      }
+      if (
+        path.match(/^\/api\/scan\/[^/]+\/analyze$/) &&
+        request.method === "POST"
+      ) {
+        const id = path.split("/")[3];
+        return await handleAnalyze(id, env);
       }
       if (path.startsWith("/api/scan/") && request.method === "GET") {
         const id = path.slice("/api/scan/".length);

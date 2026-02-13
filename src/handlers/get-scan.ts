@@ -1,4 +1,4 @@
-import type { Env, ScanRow } from "../types";
+import type { Env, ScanRow, AiReportRow } from "../types";
 import { jsonResponse } from "../lib/response";
 
 const UUID_RE =
@@ -30,5 +30,26 @@ export async function handleGetScan(
       // leave as string
     }
   }
+
+  // Include cached AI report if available
+  const aiRow = await env.DB.prepare(
+    "SELECT report, generated_at, generation_ms FROM ai_reports WHERE scan_id = ?"
+  )
+    .bind(id)
+    .first<AiReportRow>();
+
+  if (aiRow) {
+    try {
+      response.ai_report = {
+        report: JSON.parse(aiRow.report),
+        generated_at: aiRow.generated_at,
+        generation_ms: aiRow.generation_ms,
+        cached: true,
+      };
+    } catch {
+      // ignore parse errors
+    }
+  }
+
   return jsonResponse(response, origin);
 }

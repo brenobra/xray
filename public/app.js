@@ -76,6 +76,274 @@ function toggleSubGroup(id) {
   if (chevron) chevron.classList.toggle('rotate-90');
 }
 
+// =========================================================================
+// AI Analysis
+// =========================================================================
+
+var lastScanId = null;
+
+async function generateAiAnalysis() {
+  if (!lastScanId) return;
+
+  var btn = document.getElementById('ai-btn');
+  var loading = document.getElementById('ai-loading');
+  var errorEl = document.getElementById('ai-error');
+  var report = document.getElementById('ai-report');
+  var status = document.getElementById('ai-status');
+
+  btn.disabled = true;
+  loading.classList.remove('hidden');
+  errorEl.classList.add('hidden');
+  report.classList.add('hidden');
+  status.classList.remove('hidden');
+  status.textContent = 'Analyzing...';
+
+  try {
+    var res = await fetch('/api/scan/' + encodeURIComponent(lastScanId) + '/analyze', {
+      method: 'POST',
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'AI analysis failed');
+    renderAiReport(data);
+  } catch (err) {
+    errorEl.classList.remove('hidden');
+    document.getElementById('ai-error-msg').textContent = err.message;
+    status.textContent = 'Failed';
+  } finally {
+    loading.classList.add('hidden');
+    btn.disabled = false;
+  }
+}
+
+function renderAiReport(data) {
+  var report = document.getElementById('ai-report');
+  var meta = document.getElementById('ai-report-meta');
+  var status = document.getElementById('ai-status');
+
+  report.classList.remove('hidden');
+  status.classList.remove('hidden');
+  status.textContent = data.cached ? 'Cached' : '';
+
+  var metaText = '';
+  if (data.generation_ms) metaText += (data.generation_ms / 1000).toFixed(1) + 's';
+  if (data.cached) metaText += metaText ? ' (cached)' : 'Cached';
+  meta.textContent = metaText;
+
+  // Hide the generate button, show regenerate
+  var btn = document.getElementById('ai-btn');
+  btn.textContent = 'Regenerate';
+
+  var r = data.report || {};
+
+  renderOpportunitySummary(r.opportunity_summary);
+  renderVendorMapping(r.vendor_mapping);
+  renderSecurityGaps(r.security_gaps);
+  renderInfraIntelligence(r.infrastructure_intelligence);
+  renderMigrationAssessment(r.migration_assessment);
+
+  // Section errors
+  var errors = data.errors || [];
+  var errPanel = document.getElementById('ai-section-errors');
+  if (errors.length) {
+    errPanel.classList.remove('hidden');
+    document.getElementById('ai-section-errors-list').innerHTML = errors.map(function(e) {
+      return '<li>' + esc(e) + '</li>';
+    }).join('');
+  } else {
+    errPanel.classList.add('hidden');
+  }
+}
+
+function renderOpportunitySummary(section) {
+  var el = document.getElementById('ai-summary-content');
+  if (!section) { el.innerHTML = '<span class="text-content-muted">Not available</span>'; return; }
+
+  var h = '';
+  // Narrative paragraphs
+  if (section.narrative) {
+    var paragraphs = section.narrative.split('\n').filter(function(p) { return p.trim(); });
+    paragraphs.forEach(function(p) {
+      h += '<p class="text-sm text-content-secondary mb-3">' + esc(p) + '</p>';
+    });
+  }
+
+  // Top opportunities
+  var opps = section.top_opportunities || [];
+  if (opps.length) {
+    h += '<div class="flex flex-wrap gap-2 mt-3">';
+    opps.forEach(function(opp) {
+      var impactColors = {
+        high: 'bg-interest-high-bg text-interest-high border border-interest-high-border',
+        medium: 'bg-interest-medium-bg text-interest-medium border border-interest-medium-border',
+        low: 'bg-interest-low-bg text-interest-low border border-interest-low-border',
+      };
+      var cls = impactColors[opp.impact] || impactColors.low;
+      h += '<span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ' + cls + '">';
+      h += '<span class="font-medium">' + esc(opp.product) + '</span>';
+      h += '<span class="opacity-70">(' + esc(opp.area) + ')</span>';
+      h += '</span>';
+    });
+    h += '</div>';
+  }
+
+  el.innerHTML = h;
+}
+
+function renderVendorMapping(vendors) {
+  var el = document.getElementById('ai-vendor-content');
+  if (!vendors || !vendors.length) { el.innerHTML = '<span class="text-content-muted text-sm">No vendor mappings detected</span>'; return; }
+
+  var h = '<div class="overflow-x-auto">';
+  h += '<table class="w-full text-sm">';
+  h += '<thead><tr class="text-left text-content-muted text-xs uppercase tracking-wider">';
+  h += '<th class="pb-2 pr-4">Detected Vendor</th>';
+  h += '<th class="pb-2 pr-4">Category</th>';
+  h += '<th class="pb-2 pr-4">CF Replacement</th>';
+  h += '<th class="pb-2">Talking Points</th>';
+  h += '</tr></thead><tbody>';
+
+  vendors.forEach(function(v) {
+    h += '<tr class="border-t border-line">';
+    h += '<td class="py-2.5 pr-4 text-content-heading font-medium">' + esc(v.detected_vendor) + '</td>';
+    h += '<td class="py-2.5 pr-4 text-content-muted">' + esc(v.vendor_category) + '</td>';
+    h += '<td class="py-2.5 pr-4 text-content-accent font-medium">' + esc(v.cf_replacement) + '</td>';
+    h += '<td class="py-2.5"><ul class="list-disc list-inside text-content-secondary space-y-0.5">';
+    (v.talking_points || []).forEach(function(tp) {
+      h += '<li>' + esc(tp) + '</li>';
+    });
+    h += '</ul></td>';
+    h += '</tr>';
+  });
+
+  h += '</tbody></table></div>';
+  el.innerHTML = h;
+}
+
+function renderSecurityGaps(gaps) {
+  var el = document.getElementById('ai-security-content');
+  if (!gaps || !gaps.length) { el.innerHTML = '<span class="text-content-muted text-sm">No security gaps identified</span>'; return; }
+
+  var h = '<div class="space-y-3">';
+  gaps.forEach(function(g) {
+    var sevColors = {
+      high: 'bg-status-danger-muted',
+      medium: 'bg-status-warning-muted',
+      low: 'bg-status-neutral',
+    };
+    var dotClass = sevColors[g.severity] || sevColors.low;
+
+    h += '<div class="flex gap-3">';
+    h += '<span class="w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ' + dotClass + '"></span>';
+    h += '<div class="flex-1">';
+    h += '<div class="text-sm text-content-heading font-medium">' + esc(g.gap) + '</div>';
+    h += '<div class="text-xs text-content-accent mt-0.5">' + esc(g.cf_product) + ' &mdash; ' + esc(g.cf_feature) + '</div>';
+    h += '<div class="text-xs text-content-secondary mt-1">' + esc(g.business_pitch) + '</div>';
+    h += '</div></div>';
+  });
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function renderInfraIntelligence(intel) {
+  var el = document.getElementById('ai-infra-content');
+  if (!intel) { el.innerHTML = '<span class="text-content-muted text-sm">Not available</span>'; return; }
+
+  var h = '';
+
+  if (intel.infrastructure_summary) {
+    h += '<p class="text-sm text-content-secondary mb-3">' + esc(intel.infrastructure_summary) + '</p>';
+  }
+
+  if (intel.cloud_providers && intel.cloud_providers.length) {
+    h += '<div class="mb-3"><span class="text-xs text-content-muted font-semibold">Cloud Providers:</span> ';
+    intel.cloud_providers.forEach(function(cp) {
+      h += '<span class="inline-block bg-surface-elevated text-content-secondary text-xs px-2 py-0.5 rounded mr-1">' + esc(cp) + '</span>';
+    });
+    if (intel.multi_cloud_detected) {
+      h += '<span class="inline-block bg-interest-high-bg text-interest-high text-xs px-2 py-0.5 rounded border border-interest-high-border ml-1">Multi-Cloud</span>';
+    }
+    h += '</div>';
+  }
+
+  var patterns = intel.patterns || [];
+  if (patterns.length) {
+    h += '<div class="mb-3"><div class="text-xs text-content-muted font-semibold mb-1">Patterns</div>';
+    h += '<ul class="list-disc list-inside text-sm text-content-secondary space-y-0.5">';
+    patterns.forEach(function(p) { h += '<li>' + esc(p) + '</li>'; });
+    h += '</ul></div>';
+  }
+
+  var shadow = intel.shadow_it_indicators || [];
+  if (shadow.length) {
+    h += '<div><div class="text-xs text-content-muted font-semibold mb-1">Shadow IT Indicators</div>';
+    h += '<ul class="list-disc list-inside text-sm text-status-warning space-y-0.5">';
+    shadow.forEach(function(s) { h += '<li>' + esc(s) + '</li>'; });
+    h += '</ul></div>';
+  }
+
+  el.innerHTML = h || '<span class="text-content-muted text-sm">No infrastructure patterns detected</span>';
+}
+
+function renderMigrationAssessment(components) {
+  var el = document.getElementById('ai-migration-content');
+  if (!components || !components.length) { el.innerHTML = '<span class="text-content-muted text-sm">No migration components assessed</span>'; return; }
+
+  var h = '<div class="space-y-3">';
+  components.forEach(function(c) {
+    var complexityColors = {
+      easy: 'bg-status-success/20 text-status-success',
+      medium: 'bg-status-warning/20 text-status-warning',
+      hard: 'bg-status-danger/20 text-status-danger',
+    };
+    var badgeClass = complexityColors[c.complexity] || complexityColors.medium;
+
+    h += '<div class="border border-line rounded-lg p-3">';
+    h += '<div class="flex items-center justify-between mb-2">';
+    h += '<div class="flex items-center gap-2">';
+    h += '<span class="text-sm font-medium text-content-heading">' + esc(c.component) + '</span>';
+    h += '<span class="text-xs text-content-muted">from ' + esc(c.current_vendor) + '</span>';
+    h += '</div>';
+    h += '<div class="flex items-center gap-2">';
+    h += '<span class="text-xs px-2 py-0.5 rounded-full ' + badgeClass + '">' + esc(c.complexity) + '</span>';
+    if (c.estimated_effort) h += '<span class="text-xs text-content-faint">' + esc(c.estimated_effort) + '</span>';
+    h += '</div></div>';
+
+    h += '<div class="text-xs text-content-secondary mb-1">' + esc(c.approach) + '</div>';
+
+    if (c.cf_products && c.cf_products.length) {
+      h += '<div class="flex flex-wrap gap-1 mt-1.5">';
+      c.cf_products.forEach(function(p) {
+        h += '<span class="inline-block bg-surface-elevated text-content-accent text-xs px-2 py-0.5 rounded">' + esc(p) + '</span>';
+      });
+      h += '</div>';
+    }
+
+    var risks = c.risks || [];
+    if (risks.length) {
+      h += '<div class="mt-1.5 text-xs text-status-warning">';
+      risks.forEach(function(r) { h += '<span>&bull; ' + esc(r) + '</span> '; });
+      h += '</div>';
+    }
+
+    h += '</div>';
+  });
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function resetAiState() {
+  document.getElementById('ai-report').classList.add('hidden');
+  document.getElementById('ai-error').classList.add('hidden');
+  document.getElementById('ai-loading').classList.add('hidden');
+  document.getElementById('ai-section-errors').classList.add('hidden');
+  var status = document.getElementById('ai-status');
+  status.classList.add('hidden');
+  status.textContent = '';
+  var btn = document.getElementById('ai-btn');
+  btn.disabled = false;
+  btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate AI Analysis';
+}
+
 function exportJSON() {
   if (!lastScanData) return;
   var blob = new Blob([JSON.stringify(lastScanData, null, 2)], { type: 'application/json' });
@@ -259,6 +527,8 @@ function renderSecurityScore(score) {
 
 function renderResults(data) {
   lastScanData = data;
+  lastScanId = data.scan_id || null;
+  resetAiState();
   document.getElementById('results').classList.remove('hidden');
 
   // Summary
@@ -617,7 +887,17 @@ async function loadScan(id) {
     if (data.results) {
       document.getElementById('target-input').value = data.target;
       var results = typeof data.results === 'string' ? JSON.parse(data.results) : data.results;
+      results.scan_id = data.id;
       renderResults(results);
+      // If cached AI report exists, render it
+      if (data.ai_report && data.ai_report.report) {
+        renderAiReport({
+          report: data.ai_report.report,
+          cached: true,
+          generation_ms: data.ai_report.generation_ms,
+          errors: [],
+        });
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   } catch (err) {
